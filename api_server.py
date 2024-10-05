@@ -86,9 +86,28 @@ async def get_output_images(request: Request):
         return success_resp(images=images)
     except Exception as e:
         return error_resp(500, str(e))
+
+@routes.get("/comfyapi/v1/output-videos")
+async def get_output_videos(request: Request):
+    try:
+        is_temp = request.rel_url.query.get("temp", "false") == "true"
+        folder = folder_paths.get_temp_directory() if is_temp else folder_paths.get_output_directory()
+        # iterate through the folder and get the list of videos
+        videos = []
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                if file.endswith(".mp4"):
+                    video = {
+                        "name": file,
+                        "full_path": os.path.join(root, file)
+                    }
+                    videos.append(video)
+        return success_resp(videos=videos)
+    except Exception as e:
+        return error_resp(500, str(e))
     
-@routes.delete("/comfyapi/v1/output-images/{filename}")
-async def delete_output_images(request: Request):
+@routes.delete("/comfyapi/v1/output-files/{filename}")
+async def delete_output_files(request: Request):
     try:
         filename = request.match_info.get("filename")
         if filename is None:
@@ -116,7 +135,7 @@ async def get_input_images(request: Request):
         images = []
         for root, dirs, files in os.walk(folder):
             for file in files:
-                if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".mp4"):
+                if file.endswith(".png") or file.endswith(".jpg"):
                     image = {
                         "name": file,
                         "full_path": os.path.join(root, file)
@@ -126,8 +145,26 @@ async def get_input_images(request: Request):
     except Exception as e:
         return error_resp(500, str(e))
 
-@routes.delete("/comfyapi/v1/input-images/{filename}")
-async def delete_input_images(request: Request):
+@routes.get("/comfyapi/v1/input-videos")
+async def get_input_videos(request: Request):
+    try:
+        folder = folder_paths.get_input_directory()
+        # iterate through the folder and get the list of videos
+        videos = []
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                if file.endswith(".mp4"):
+                    video = {
+                        "name": file,
+                        "full_path": os.path.join(root, file)
+                    }
+                    videos.append(video)
+        return success_resp(videos=videos)
+    except Exception as e:
+        return error_resp(500, str(e))
+
+@routes.delete("/comfyapi/v1/input-files/{filename}")
+async def delete_input_files(request: Request):
     try:
         filename = request.match_info.get("filename")
         if filename is None:
