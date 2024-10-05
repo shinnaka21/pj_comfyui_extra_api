@@ -108,6 +108,43 @@ async def delete_output_images(request: Request):
     except Exception as e:
         return error_resp(500, str(e))
 
+@routes.get("/comfyapi/v1/input-images")
+async def get_input_images(request: Request):
+    try:
+        folder = folder_paths.get_input_directory()
+        # iterate through the folder and get the list of images
+        images = []
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                if file.endswith(".png") or file.endswith(".jpg"):
+                    image = {
+                        "name": file,
+                        "full_path": os.path.join(root, file)
+                    }
+                    images.append(image)
+        return success_resp(images=images)
+    except Exception as e:
+        return error_resp(500, str(e))
+
+@routes.delete("/comfyapi/v1/input-images/{filename}")
+async def delete_input_images(request: Request):
+    try:
+        filename = request.match_info.get("filename")
+        if filename is None:
+            return error_resp(400, "filename is required")
+        
+        if filename[0] == '/' or '..' in filename:
+            return error_resp(400, "invalid filename")
+
+        annotated_file = f"{filename} [{'input'}]"
+        if not folder_paths.exists_annotated_filepath(annotated_file):
+            return error_resp(404, f"file {filename} not found")
+        
+        filepath = folder_paths.get_annotated_filepath(annotated_file)
+        os.remove(filepath)
+        return success_resp()
+    except Exception as e:
+        return error_resp(500, str(e))
 
 def run_comfyui_extra_api():
     print("extra API server started")
