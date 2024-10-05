@@ -116,7 +116,7 @@ async def get_input_images(request: Request):
         images = []
         for root, dirs, files in os.walk(folder):
             for file in files:
-                if file.endswith(".png") or file.endswith(".jpg"):
+                if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".mp4"):
                     image = {
                         "name": file,
                         "full_path": os.path.join(root, file)
